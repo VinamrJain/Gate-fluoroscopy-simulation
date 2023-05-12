@@ -1,0 +1,179 @@
+
+#=====================================================
+# VERBOSITY
+#=====================================================
+
+/control/execute mac/verbose.mac
+
+#=====================================================
+# VISUALISATION
+#=====================================================
+
+#/control/execute mac/visu.mac
+
+#=====================================================
+# GEOMETRY
+#=====================================================
+
+/gate/geometry/setMaterialDatabase data/GateMaterials.db
+
+# World
+/gate/world/geometry/setXLength 5 m
+/gate/world/geometry/setYLength 5 m
+/gate/world/geometry/setZLength 5 m
+/gate/world/setMaterial Air
+/gate/world/vis/setVisible 1
+
+# Aluminium operating table
+/gate/world/daughters/name table
+/gate/world/daughters/insert box
+/gate/table/geometry/setXLength  60 cm
+/gate/table/geometry/setYLength  200 cm
+/gate/table/geometry/setZLength  5 cm
+/gate/table/placement/setTranslation 0 0 100 cm
+/gate/table/setMaterial Aluminium
+/gate/table/vis/setVisible 1
+/gate/table/vis/setColor gray
+/gate/table/vis/forceSolid 
+
+# patient Phantom
+/gate/world/daughters/name              patient
+/gate/world/daughters/insert            box
+/gate/patient/geometry/setXLength      50 cm
+/gate/patient/geometry/setYLength      170 cm
+/gate/patient/geometry/setZLength      30 cm
+/gate/patient/placement/setTranslation 0 0 117.5 cm
+/gate/patient/setMaterial Water
+/gate/patient/vis/setVisible 1
+/gate/patient/vis/setColor blue
+/gate/patient/vis/forceSolid 
+
+# surgeon Phantom
+/gate/world/daughters/name              surgeon
+/gate/world/daughters/insert            box
+/gate/surgeon/geometry/setXLength      30 cm
+/gate/surgeon/geometry/setYLength      50 cm
+/gate/surgeon/geometry/setZLength      170 cm
+/gate/surgeon/placement/setTranslation 50 0 85 cm
+/gate/surgeon/setMaterial Water
+/gate/surgeon/vis/setVisible 1
+/gate/surgeon/vis/setColor red
+/gate/surgeon/vis/forceSolid
+
+
+
+#=====================================================
+# PHYSICS
+#=====================================================
+
+/gate/physics/addPhysicsList emstandard_opt3
+
+/gate/physics/Gamma/SetCutInRegion      world 10 mm
+/gate/physics/Electron/SetCutInRegion   world 10 mm
+/gate/physics/Positron/SetCutInRegion   world 10 mm
+
+/gate/physics/Gamma/SetCutInRegion      table 0.01 mm
+/gate/physics/Electron/SetCutInRegion   table 0.01 mm
+/gate/physics/Positron/SetCutInRegion   table 0.01 mm
+
+/gate/physics/Gamma/SetCutInRegion      patient 0.01 mm
+/gate/physics/Electron/SetCutInRegion   patient 0.01 mm
+/gate/physics/Positron/SetCutInRegion   patient 0.01 mm
+
+/gate/physics/Gamma/SetCutInRegion      surgeon 0.01 mm
+/gate/physics/Electron/SetCutInRegion   surgeon 0.01 mm
+/gate/physics/Positron/SetCutInRegion   surgeon 0.01 mm
+
+#/gate/physics/processes/PhotoElectric/setAugerElectron true
+#/gate/physics/processes/PhotoElectric/setXRayCut 500 keV
+
+/gate/physics/displayCuts
+
+
+#=====================================================
+# DETECTORS
+#=====================================================
+
+/gate/actor/addActor                     DoseActor  dose3d
+/gate/actor/dose3d/save                  output/3d-fluoroscopy.mhd
+/gate/actor/dose3d/attachTo    	         surgeon
+/gate/actor/dose3d/stepHitType           random
+/gate/actor/dose3d/setPosition           0 0 0 cm
+/gate/actor/dose3d/setResolution         50 50 50
+/gate/actor/dose3d/saveEveryNSeconds     60
+/gate/actor/dose3d/enableEdep            true
+/gate/actor/dose3d/enableUncertaintyEdep true
+/gate/actor/dose3d/enableDose            true
+/gate/actor/dose3d/enableUncertaintyDose true
+/gate/actor/dose3d/enableNumberOfHits    false
+
+/gate/actor/addActor                        DoseActor  depthdose
+/gate/actor/depthdose/save                  output/fluoroscopy-depth.txt
+/gate/actor/depthdose/attachTo    	        surgeon
+/gate/actor/depthdose/stepHitType           random
+/gate/actor/depthdose/setPosition           0 0 0 cm
+/gate/actor/depthdose/setResolution         100 1 1
+/gate/actor/depthdose/saveEveryNSeconds     60
+/gate/actor/depthdose/enableEdep            true
+/gate/actor/depthdose/enableUncertaintyEdep true
+/gate/actor/depthdose/enableDose            true
+/gate/actor/depthdose/enableUncertaintyDose true
+/gate/actor/depthdose/enableNumberOfHits    false
+
+/gate/actor/addActor                          DoseActor  doseprofile
+/gate/actor/doseprofile/save                  output/fluoroscopy-profile.txt
+/gate/actor/doseprofile/attachTo    	      surgeon
+/gate/actor/doseprofile/stepHitType           random
+/gate/actor/doseprofile/setPosition           0 0 0 cm
+/gate/actor/doseprofile/setResolution         1 100 100
+/gate/actor/doseprofile/setSize               30 50 170 cm
+/gate/actor/doseprofile/saveEveryNSeconds     60
+/gate/actor/doseprofile/enableEdep            true
+/gate/actor/doseprofile/enableUncertaintyEdep true
+/gate/actor/doseprofile/enableDose            true
+/gate/actor/doseprofile/enableUncertaintyDose true
+/gate/actor/doseprofile/enableNumberOfHits    false
+
+/gate/actor/addActor               SimulationStatisticActor stat
+/gate/actor/stat/save              output/fluoroscopy-stat.txt
+/gate/actor/stat/saveEveryNSeconds 60
+
+
+#=====================================================
+# INITIALISATION
+#=====================================================
+
+/gate/run/initialize
+
+
+#=====================================================
+# BEAMS
+#=====================================================
+
+/gate/source/addSource mybeam gps
+/gate/source/mybeam/gps/particle gamma
+/gate/source/mybeam/gps/pos/type Beam
+/gate/source/mybeam/gps/pos/rot1 0 1 0
+/gate/source/mybeam/gps/pos/rot2 1 0 0
+/gate/source/mybeam/gps/pos/shape Circle
+/gate/source/mybeam/gps/pos/centre 0 0 0 mm
+/gate/source/mybeam/gps/pos/sigma_x 3 mm
+/gate/source/mybeam/gps/pos/sigma_y 3 mm
+/gate/source/mybeam/gps/ene/mono 43 keV
+/gate/source/mybeam/gps/ene/type Gauss
+/gate/source/mybeam/gps/ene/sigma 2.0 keV
+/gate/source/mybeam/gps/direction 0 0 1
+/gate/source/mybeam/visualize 10 yellow 2
+#=====================================================
+# START BEAMS
+#=====================================================
+
+# JamesRandom Ranlux64 MersenneTwister
+/gate/random/setEngineName MersenneTwister
+/gate/random/setEngineSeed auto
+
+#/tracking/verbose 1
+
+/gate/application/noGlobalOutput
+/gate/application/setTotalNumberOfPrimaries 10000000
+/gate/application/start
